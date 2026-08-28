@@ -27,7 +27,8 @@ export function buildCurlCommand(request, options = {}) {
     maskHeaders = false,
     compressed = false,
     insecure = false,
-    followRedirects = false
+    followRedirects = false,
+    verbose = false
   } = options;
 
   const method = (request.method || 'GET').toUpperCase();
@@ -53,6 +54,7 @@ export function buildCurlCommand(request, options = {}) {
   parts.push(escapeShellArg(targetUrl));
 
   // Flags
+  if (verbose) parts.push('-v');
   if (followRedirects) parts.push('-L');
   if (insecure) parts.push('-k');
   if (compressed) parts.push('--compressed');

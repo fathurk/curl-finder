@@ -256,7 +256,7 @@ export const server = http.createServer(async (req, res) => {
         return res.end(JSON.stringify({ success: false, error: 'Invalid JSON request body' }));
       }
 
-      const { text, format = 'auto', baseUrl = '', multiline = true, maskHeaders = false, compressed = false, insecure = false, followRedirects = false } = payload;
+      const { text, format = 'auto', baseUrl = '', multiline = true, maskHeaders = false, compressed = false, insecure = false, followRedirects = false, verbose = false } = payload;
 
       if (!text || typeof text !== 'string') {
         res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -270,7 +270,8 @@ export const server = http.createServer(async (req, res) => {
         maskHeaders,
         compressed,
         insecure,
-        followRedirects
+        followRedirects,
+        verbose
       });
       const summary = computeSummary(enriched);
 

@@ -183,6 +183,22 @@ test('6. cURL Command Generator', async (t) => {
     assert.match(singleLine, /X-Api-Key: \*\*\*\*\*\*\*\*/);
   });
 
+  await t.test('generates cURL with -v verbose flag when verbose is true', () => {
+    const req = {
+      method: 'GET',
+      url: 'https://api.example.com/status',
+      headers: {}
+    };
+
+    const verboseCurl = buildCurlCommand(req, {
+      verbose: true,
+      multiline: false
+    });
+
+    assert.match(verboseCurl, /-v/);
+    assert.match(verboseCurl, /'https:\/\/api\.example\.com\/status'/);
+  });
+
   await t.test('escapes quotes safely in shell arguments', () => {
     const escaped = escapeShellArg("it's a test");
     assert.equal(escaped, `'it'\\''s a test'`);

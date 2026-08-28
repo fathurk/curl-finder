@@ -11,6 +11,7 @@ const state = {
     multiline: true,
     maskHeaders: false,
     compressed: false,
+    verbose: false,
     insecure: false,
     followRedirects: false
   }
@@ -25,6 +26,7 @@ const baseUrlInput = document.getElementById('baseUrlInput');
 const multilineToggle = document.getElementById('multilineToggle');
 const maskHeadersToggle = document.getElementById('maskHeadersToggle');
 const compressedToggle = document.getElementById('compressedToggle');
+const verboseToggle = document.getElementById('verboseToggle');
 const insecureToggle = document.getElementById('insecureToggle');
 const resultsCountBadge = document.getElementById('resultsCountBadge');
 const parsingStatus = document.getElementById('parsingStatus');
@@ -101,6 +103,13 @@ function setupEventListeners() {
     state.options.compressed = compressedToggle.checked;
     if (state.requests.length > 0) parseCurrentInput();
   });
+
+  if (verboseToggle) {
+    verboseToggle.addEventListener('change', () => {
+      state.options.verbose = verboseToggle.checked;
+      if (state.requests.length > 0) parseCurrentInput();
+    });
+  }
 
   insecureToggle.addEventListener('change', () => {
     state.options.insecure = insecureToggle.checked;
@@ -239,6 +248,7 @@ async function parseCurrentInput() {
         multiline: multilineToggle.checked,
         maskHeaders: maskHeadersToggle.checked,
         compressed: compressedToggle.checked,
+        verbose: verboseToggle ? verboseToggle.checked : false,
         insecure: insecureToggle.checked
       })
     });
@@ -273,6 +283,7 @@ async function handleFileUpload(file) {
   formData.append('multiline', multilineToggle.checked);
   formData.append('maskHeaders', maskHeadersToggle.checked);
   formData.append('compressed', compressedToggle.checked);
+  formData.append('verbose', verboseToggle ? verboseToggle.checked : false);
   formData.append('insecure', insecureToggle.checked);
 
   try {
