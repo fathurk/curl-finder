@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>cURL Finder - Log to cURL Generator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              900: '#0c4a6e',
+            }
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'Fira Code', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased selection:bg-sky-500 selection:text-white transition-colors duration-200">
+
+  <!-- Top Navigation -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30 px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+          <span class="text-xl font-bold text-white tracking-wider">&gt;_</span>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold text-white tracking-tight">cURL Finder</h1>
+            <span class="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">Local v1.0</span>
+          </div>
+          <p class="text-xs text-slate-400">Extract & replay HTTP requests from server & debug logs</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <!-- Preset Dropdown -->
+        <div class="relative inline-block text-left">
+          <button id="samplesDropdownBtn" type="button" class="inline-flex items-center gap-x-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 shadow-sm ring-1 ring-inset ring-slate-700 hover:bg-slate-750 hover:text-white transition">
+            <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Load Sample Logs
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="samplesMenu" class="hidden absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-lg bg-slate-800 p-1 shadow-xl ring-1 ring-slate-700 border border-slate-700">
+            <button class="sample-opt w-full text-left px-3 py-2 text-xs rounded text-slate-300 hover:bg-slate-700 hover:text-white flex items-center justify-between" data-sample="json">
+              <span>JSON / Pino Logs</span>
+              <span class="text-[10px] text-sky-400 bg-sky-950 px-1.5 py-0.5 rounded">JSON</span>
+            </button>
+            <button class="sample-opt w-full text-left px-3 py-2 text-xs rounded text-slate-300 hover:bg-slate-700 hover:text-white flex items-center justify-between" data-sample="nginx">
+              <span>Nginx Access Logs</span>
+              <span class="text-[10px] text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded">Nginx</span>
+            </button>
+            <button class="sample-opt w-full text-left px-3 py-2 text-xs rounded text-slate-300 hover:bg-slate-700 hover:text-white flex items-center justify-between" data-sample="debug">
+              <span>Axios / Debug Logs</span>
+              <span class="text-[10px] text-purple-400 bg-purple-950 px-1.5 py-0.5 rounded">Axios</span>
+            </button>
+            <button class="sample-opt w-full text-left px-3 py-2 text-xs rounded text-slate-300 hover:bg-slate-700 hover:text-white flex items-center justify-between" data-sample="rawHttp">
+              <span>Raw HTTP Wire Dump</span>
+              <span class="text-[10px] text-amber-400 bg-amber-950 px-1.5 py-0.5 rounded">HTTP</span>
+            </button>
+            <button class="sample-opt w-full text-left px-3 py-2 text-xs rounded text-slate-300 hover:bg-slate-700 hover:text-white flex items-center justify-between" data-sample="tke">
+              <span>TKE / K8s Container Log</span>
+              <span class="text-[10px] text-cyan-400 bg-cyan-950 px-1.5 py-0.5 rounded">TKE/K8s</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dark/Light Theme Toggle -->
+        <button id="themeToggle" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white ring-1 ring-slate-700 hover:bg-slate-700 transition" title="Toggle theme">
+          <svg id="themeIconDark" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg id="themeIconLight" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="max-w-7xl mx-auto px-4 lg:px-8 py-6 space-y-6">
+
+    <!-- Configuration / Options Toolbar -->
+    <div class="bg-slate-800/60 rounded-xl p-4 border border-slate-800 shadow-sm backdrop-blur grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+      <!-- Base URL Input -->
+      <div class="md:col-span-4">
+        <label for="baseUrlInput" class="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+          Default Base URL / Host Fallback
+        </label>
+        <div class="relative">
+          <input type="text" id="baseUrlInput" placeholder="http://localhost:3000 or https://api.example.com" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono transition">
+        </div>
+      </div>
+
+      <!-- Format & Toggles -->
+      <div class="md:col-span-8 flex flex-wrap items-center gap-3 md:justify-end text-xs text-slate-300">
+        <!-- Multiline toggle -->
+        <label class="flex items-center space-x-2 cursor-pointer bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700/80 hover:border-slate-600 transition">
+          <input type="checkbox" id="multilineToggle" checked class="rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-sky-500">
+          <span class="font-medium">Multiline (<span class="font-mono text-sky-400">\</span>)</span>
+        </label>
+
+        <!-- Mask Sensitive Headers -->
+        <label class="flex items-center space-x-2 cursor-pointer bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700/80 hover:border-slate-600 transition">
+          <input type="checkbox" id="maskHeadersToggle" class="rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-sky-500">
+          <span class="font-medium">Mask Auth Tokens</span>
+        </label>
+
+        <!-- Flag: Compressed -->
+        <label class="flex items-center space-x-2 cursor-pointer bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700/80 hover:border-slate-600 transition">
+          <input type="checkbox" id="compressedToggle" class="rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-sky-500">
+          <span class="font-mono">--compressed</span>
+        </label>
+
+        <!-- Flag: Insecure -->
+        <label class="flex items-center space-x-2 cursor-pointer bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700/80 hover:border-slate-600 transition">
+          <input type="checkbox" id="insecureToggle" class="rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-sky-500">
+          <span class="font-mono">-k (insecure)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Main Grid: Input Area + Results Area -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- LEFT COLUMN: Log Input Panel -->
+      <section class="lg:col-span-5 flex flex-col space-y-4">
+        <div class="bg-slate-800/70 border border-slate-800 rounded-xl overflow-hidden shadow-md flex flex-col flex-1">
+          <!-- Input Header & Tabs -->
+          <div class="bg-slate-800/90 px-4 py-2.5 border-b border-slate-700/60 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <button id="tabPaste" class="text-xs font-semibold px-3 py-1 rounded-md bg-sky-500/20 text-sky-400 border border-sky-500/30">Paste Logs</button>
+              <button id="tabUpload" class="text-xs font-medium px-3 py-1 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition">Upload File</button>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span id="lineCountBadge" class="text-[11px] font-mono text-slate-400">0 lines</span>
+              <button id="clearInputBtn" class="text-xs text-slate-400 hover:text-rose-400 transition" title="Clear text">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Paste Tab View -->
+          <div id="pasteView" class="p-4 flex-1 flex flex-col space-y-3">
+            <textarea id="logInput" rows="16" placeholder="Paste your server logs, JSON logs, Nginx access logs, Axios debug logs, or raw HTTP dumps here...&#10;&#10;Examples:&#10;• {&quot;req&quot;: {&quot;method&quot;: &quot;POST&quot;, &quot;url&quot;: &quot;/api/login&quot;, &quot;body&quot;: {&quot;user&quot;: &quot;admin&quot;}}}&#10;• 127.0.0.1 - - [28/Aug/2026] &quot;GET /api/v1/items HTTP/1.1&quot; 200&#10;• [Axios] POST https://api.example.com/checkout Data: {...}&#10;• POST /api/v1/orders HTTP/1.1" class="w-full flex-1 bg-slate-950 border border-slate-700/80 rounded-lg p-3 text-xs font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-y leading-relaxed transition"></textarea>
+            
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] text-slate-500">Auto-detects format • Shortcut: <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 font-mono text-[10px]">Cmd / Ctrl + Enter</kbd></span>
+              <button id="parseBtn" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-white font-semibold text-xs shadow-lg shadow-sky-500/25 active:scale-95 transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Generate cURLs
+              </button>
+            </div>
+          </div>
+
+          <!-- Upload Dropzone View -->
+          <div id="uploadView" class="hidden p-6 flex-1 flex flex-col items-center justify-center">
+            <div id="dropzone" class="w-full border-2 border-dashed border-slate-700 hover:border-sky-500/80 rounded-xl p-8 text-center bg-slate-900/50 hover:bg-sky-500/5 transition cursor-pointer flex flex-col items-center justify-center space-y-3">
+              <div class="w-12 h-12 rounded-full bg-slate-800 text-sky-400 flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-slate-200">Drag and drop log file here</p>
+                <p class="text-xs text-slate-500 mt-1">Supports <span class="font-mono text-slate-400">.log, .txt, .json, .ndjson, .har</span> up to 50MB</p>
+              </div>
+              <input type="file" id="fileInput" class="hidden" accept=".log,.txt,.json,.ndjson,.har">
+              <button type="button" class="mt-2 text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-sky-400 border border-slate-700 hover:bg-slate-750">Browse File</button>
+            </div>
+            <div id="uploadStatus" class="hidden mt-4 text-xs text-slate-400 w-full text-center"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: Generated cURL Commands & Details -->
+      <section class="lg:col-span-7 flex flex-col space-y-4">
+
+        <!-- Results Header & Filtering Controls -->
+        <div class="bg-slate-800/70 border border-slate-800 rounded-xl p-4 shadow-md backdrop-blur flex flex-col space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-2">
+              <span id="resultsCountBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">0 Requests Found</span>
+              <span id="parsingStatus" class="text-xs text-slate-400">Ready</span>
+            </div>
+
+            <!-- Batch Action Buttons -->
+            <div class="flex items-center space-x-2">
+              <button id="copyAllBtn" disabled class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition">
+                <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Copy All cURLs
+              </button>
+              <button id="exportScriptBtn" disabled class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition">
+                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Download .sh Script
+              </button>
+            </div>
+          </div>
+
+          <!-- Search & Filter Badges -->
+          <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-750">
+            <!-- Search bar -->
+            <div class="relative flex-1 min-w-[200px]">
+              <input type="text" id="searchInput" placeholder="Filter by endpoint, header, method, or log text..." class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500 transition">
+              <svg class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+
+            <!-- Method Filter Pills -->
+            <div id="methodFilters" class="flex items-center space-x-1 text-xs">
+              <button data-method="ALL" class="method-filter-btn px-2.5 py-1 rounded-md font-semibold bg-sky-500 text-white shadow-sm transition">ALL</button>
+              <button data-method="GET" class="method-filter-btn px-2 py-1 rounded-md font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">GET</button>
+              <button data-method="POST" class="method-filter-btn px-2 py-1 rounded-md font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">POST</button>
+              <button data-method="PUT" class="method-filter-btn px-2 py-1 rounded-md font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">PUT</button>
+              <button data-method="DELETE" class="method-filter-btn px-2 py-1 rounded-md font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">DEL</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Requests Container / Cards List -->
+        <div id="requestsList" class="space-y-4 max-h-[700px] overflow-y-auto pr-1">
+          <!-- Empty State -->
+          <div id="emptyState" class="bg-slate-800/40 border border-slate-800 border-dashed rounded-xl p-12 text-center flex flex-col items-center justify-center space-y-3">
+            <div class="w-14 h-14 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-500">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-300">No HTTP requests parsed yet</h3>
+              <p class="text-xs text-slate-500 mt-1 max-w-sm">Paste logs on the left or click "Load Sample Logs" in the top bar to see generated cURL commands instantly.</p>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Toast Notification Container -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-800 border border-slate-700 text-white text-xs px-4 py-2.5 rounded-xl shadow-2xl flex items-center space-x-2">
+    <span id="toastIcon">✅</span>
+    <span id="toastMsg">Copied to clipboard!</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
