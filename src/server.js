@@ -2,6 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { exec } from 'node:child_process';
 import { parseLogs } from './parser/index.js';
 import { buildCurlCommand } from './builder/curlBuilder.js';
 
@@ -430,7 +431,21 @@ export const server = http.createServer(async (req, res) => {
   }
 });
 
-export function startServer(port = PORT) {
+export function openBrowser(url) {
+  const platform = process.platform;
+  let cmd = '';
+  if (platform === 'darwin') {
+    cmd = `open "${url}"`;
+  } else if (platform === 'win32') {
+    cmd = `start "" "${url}"`;
+  } else {
+    cmd = `xdg-open "${url}"`;
+  }
+
+  exec(cmd, () => {});
+}
+
+export function startServer(port = PORT, onListening = null) {
   return new Promise((resolve) => {
     server.listen(port, () => {
       const address = server.address();
@@ -438,6 +453,10 @@ export function startServer(port = PORT) {
       console.log(`\n🚀 cURL Finder Server running at: http://localhost:${actualPort}`);
       console.log(`📁 Web UI ready at: http://localhost:${actualPort}\n`);
       console.log(`📝 Watching incoming logs in: ${DEBUG_LOG_FILE}\n`);
+      
+      if (typeof onListening === 'function') {
+        onListening(actualPort);
+      }
       resolve(server);
     });
   });
@@ -446,7 +465,13 @@ export function startServer(port = PORT) {
 const isDirectCli = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
 
 if (isDirectCli && process.env.NODE_ENV !== 'test') {
-  startServer(PORT);
+  startServer(PORT, (actualPort) => {
+    const url = `http://localhost:${actualPort}`;
+    if (process.env.NO_OPEN !== 'true' && !process.argv.includes('--no-open')) {
+      console.log(`🌐 Automatically opening ${url} in your browser...\n`);
+      openBrowser(url);
+    }
+  });
 }
 
 export default server;

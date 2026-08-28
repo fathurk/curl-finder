@@ -180,13 +180,13 @@ if (!process.stdin.isTTY) {
   // 4. DEFAULT INTERACTIVE SERVER MODE: "curl-finder"
   const portIndex = args.indexOf('--port');
   const port = portIndex !== -1 && args[portIndex + 1] ? parseInt(args[portIndex + 1], 10) : (process.env.PORT || 3000);
-  const shouldOpen = !args.includes('--no-open');
+  const shouldOpen = !args.includes('--no-open') && process.env.NO_OPEN !== 'true';
 
-  const server = startServer(port, () => {
-    const url = `http://localhost:${port}`;
-    console.log(`🚀 cURL Finder running at: ${url}`);
+  const server = await startServer(port, (actualPort) => {
+    const url = `http://localhost:${actualPort}`;
     if (shouldOpen) {
-      exec(`open ${url}`);
+      console.log(`🌐 Automatically opening ${url} in your browser...\n`);
+      exec(`open "${url}"`);
     }
   });
 
