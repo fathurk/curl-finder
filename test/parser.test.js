@@ -272,3 +272,49 @@ test('9. Completeness & Composition Scoring', async (t) => {
   });
 });
 
+test('10. Chucker Android HTTP Inspector Logs', async (t) => {
+  await t.test('parses Chucker export format with headers and query params', () => {
+    const chuckerLog = [
+      'URL: https://tgr-txl-content-service.ext.dp.xl.co.id/v4/content/profiling/product-item-list?brand=XL&product-category=PAKET+HARIAN',
+      'Method: GET',
+      'Protocol: h2',
+      'Status: Complete',
+      'Response: 200',
+      'SSL: Yes',
+      '',
+      'Request time: Fri Aug 28 13:32:01 GMT+07:00 2026',
+      'Response time: Fri Aug 28 13:32:01 GMT+07:00 2026',
+      'Duration: 78 ms',
+      '',
+      '---------- Request ----------',
+      '',
+      'X-TIMESTAMP: mock-timestamp-signature-dummy',
+      'Accept: application/json',
+      'Authorization: Bearer mock-chucker-token-uuid-67890',
+      'language: ID',
+      'version: 9.6.0',
+      'User-Agent: SiDOMPUL-staging',
+      '',
+      '(body is empty)',
+      '',
+      '---------- Response ----------',
+      '',
+      '{"statusCode":200}'
+    ].join('\n');
+
+    const results = parseLogs(chuckerLog);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].method, 'GET');
+    assert.equal(results[0].url, 'https://tgr-txl-content-service.ext.dp.xl.co.id/v4/content/profiling/product-item-list?brand=XL&product-category=PAKET+HARIAN');
+    assert.equal(results[0].headers['Authorization'], 'Bearer mock-chucker-token-uuid-67890');
+    assert.equal(results[0].headers['Accept'], 'application/json');
+    assert.equal(results[0].headers['User-Agent'], 'SiDOMPUL-staging');
+    assert.equal(results[0].statusCode, 200);
+
+    const curl = buildCurlCommand(results[0], { multiline: true });
+    assert.match(curl, /'https:\/\/tgr-txl-content-service\.ext\.dp\.xl\.co\.id\/v4\/content\/profiling\/product-item-list\?brand=XL&product-category=PAKET\+HARIAN'/);
+    assert.match(curl, /-H 'Authorization: Bearer mock-chucker-token-uuid-67890'/);
+  });
+});
+
+

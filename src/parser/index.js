@@ -5,6 +5,7 @@ import { parseRawHttpRequest } from './rawHttpParser.js';
 import { unwrapContainerLogs } from './containerUnwrapper.js';
 import { parseFragmentedCurl } from './curlAssembler.js';
 import { parseJsObjectLog } from './jsObjectParser.js';
+import { isChuckerLog, parseChuckerLogs } from './chuckerParser.js';
 
 /**
  * Strips ANSI color escape sequences from terminal logs.
@@ -43,13 +44,24 @@ export function parseLogs(rawText, options = {}) {
     const lines = text.split(/\r?\n/);
     return lines.map((l, i) => parseAccessLog(l, i + 1)).filter(Boolean);
   }
+  if (format === 'chucker') {
+    return parseChuckerLogs(text, 1);
+  }
 
   // 2. CONTAINER LOG UNWRAPPING (TKE __CONTENT__, Docker, K8s, CloudWatch)
   const unwrapped = unwrapContainerLogs(text);
   const targetText = unwrapped.isWrapped ? unwrapped.unwrappedText : text;
   const workingLines = unwrapped.isWrapped ? unwrapped.lines : targetText.split(/\r?\n/);
 
-  // 3. CHECK FOR FRAGMENTED / MULTI-LINE / REVERSE-ORDERED cURL COMMANDS
+  // 3. CHECK FOR CHUCKER ANDROID HTTP INSPECTOR LOGS
+  if (isChuckerLog(targetText)) {
+    const chuckerReqs = parseChuckerLogs(targetText, 1);
+    if (chuckerReqs.length > 0) {
+      return chuckerReqs;
+    }
+  }
+
+  // 4. CHECK FOR FRAGMENTED / MULTI-LINE / REVERSE-ORDERED cURL COMMANDS
   const fragmentedCurl = parseFragmentedCurl(workingLines, 1);
   if (fragmentedCurl && (fragmentedCurl.url !== '/' || fragmentedCurl.body || Object.keys(fragmentedCurl.headers).length > 0)) {
     return [fragmentedCurl];

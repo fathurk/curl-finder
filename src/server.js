@@ -120,6 +120,37 @@ const SAMPLE_LOGS = {
     `{"__CONTENT__":"  -H 'Content-Type: application/json' \\\\","__FILENAME__":"/var/log/stdout.log"}`,
     `{"__CONTENT__":"  -H 'Xc-Authorization: Bearer eyJhbGciOiJSUzI1Ni... ' \\\\","__FILENAME__":"/var/log/stdout.log"}`,
     `{"__CONTENT__":"curl -X POST 'https://gateway.egw.xl.co.id/proxy/comarch/v1/o/b2b/axiapp/customers/60265/pointsDeduct' \\\\","__FILENAME__":"/var/log/stdout.log"}`
+  ].join('\n'),
+
+  chuckerLogs: [
+    `URL: https://tgr-txl-content-service.ext.dp.xl.co.id/v4/content/profiling/product-item-list?brand=XL&product-category=PAKET+HARIAN`,
+    `Method: GET`,
+    `Protocol: h2`,
+    `Status: Complete`,
+    `Response: 200`,
+    `SSL: Yes`,
+    ``,
+    `Request time: Fri Aug 28 13:32:01 GMT+07:00 2026`,
+    `Response time: Fri Aug 28 13:32:01 GMT+07:00 2026`,
+    `Duration: 78 ms`,
+    ``,
+    `---------- Request ----------`,
+    ``,
+    `X-TIMESTAMP: mock-timestamp-signature-dummy`,
+    `Accept: application/json`,
+    `Authorization: Bearer mock-chucker-token-uuid-67890`,
+    `language: ID`,
+    `version: 9.6.0`,
+    `User-Agent: SiDOMPUL-staging`,
+    ``,
+    `(body is empty)`,
+    ``,
+    `---------- Response ----------`,
+    ``,
+    `date: Fri, 28 Aug 2026 06:32:01 GMT`,
+    `content-type: application/json`,
+    ``,
+    `{"statusCode":200,"statusMessage":"OK"}`
   ].join('\n')
 };
 
