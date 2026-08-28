@@ -1,12 +1,19 @@
 {
   "name": "curl-finder",
   "version": "1.0.0",
-  "description": "Local Node.js web application to extract HTTP requests from logs and generate runnable cURL commands.",
+  "description": "Local Node.js web application and CLI to extract HTTP requests from logs and generate runnable cURL commands.",
   "main": "src/server.js",
   "type": "module",
+  "bin": {
+    "curl-finder": "./bin/cli.js"
+  },
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "clip": "node bin/cli.js clip",
+    "daemon:start": "node bin/cli.js daemon start",
+    "daemon:stop": "node bin/cli.js daemon stop",
+    "daemon:status": "node bin/cli.js daemon status",
     "test": "node --test test/**/*.test.js"
   },
   "keywords": [
@@ -15,6 +22,7 @@
     "http",
     "nginx",
     "json-logs",
+    "chucker",
     "developer-tools"
   ],
   "author": "",
