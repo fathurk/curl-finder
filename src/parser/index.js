@@ -4,6 +4,7 @@ import { parseDebugLog, parseEmbeddedCurl } from './debugLogParser.js';
 import { parseRawHttpRequest } from './rawHttpParser.js';
 import { unwrapContainerLogs } from './containerUnwrapper.js';
 import { parseFragmentedCurl } from './curlAssembler.js';
+import { parseJsObjectLog } from './jsObjectParser.js';
 
 /**
  * Strips ANSI color escape sequences from terminal logs.
@@ -124,7 +125,10 @@ export function parseLogs(rawText, options = {}) {
           const parsed = JSON.parse(candidateJson);
           const req = extractFromJsonObject(parsed, jsonStartLine, candidateJson);
           if (req) results.push(req);
-        } catch {}
+        } catch {
+          const jsReq = parseJsObjectLog(candidateJson, jsonStartLine);
+          if (jsReq) results.push(jsReq);
+        }
         inJsonBlock = false;
         jsonBuffer = [];
         jsonBraceCount = 0;
@@ -172,14 +176,23 @@ export function parseLogs(rawText, options = {}) {
       }
     }
 
-    // 5d. Try Access Log parser (Nginx/Apache/Envoy)
+    // 5d. Try JS Object / Python Dict parser (handles single-quoted objects like { 'url': '...', 'headers': ... })
+    if (trimmed.includes("{'") || trimmed.includes("':") || (trimmed.includes('url') && trimmed.includes('{'))) {
+      const jsReq = parseJsObjectLog(trimmed, lineNumber);
+      if (jsReq) {
+        results.push(jsReq);
+        continue;
+      }
+    }
+
+    // 5e. Try Access Log parser (Nginx/Apache/Envoy)
     const accessReq = parseAccessLog(trimmed, lineNumber);
     if (accessReq) {
       results.push(accessReq);
       continue;
     }
 
-    // 5e. Try Debug Log / Framework / Logfmt / Embedded cURL parser
+    // 5f. Try Debug Log / Framework / Logfmt / Embedded cURL parser
     const debugReq = parseDebugLog(trimmed, lineNumber);
     if (debugReq) {
       results.push(debugReq);
@@ -200,7 +213,10 @@ export function parseLogs(rawText, options = {}) {
       const parsed = JSON.parse(candidateJson);
       const req = extractFromJsonObject(parsed, jsonStartLine, candidateJson);
       if (req) results.push(req);
-    } catch {}
+    } catch {
+      const jsReq = parseJsObjectLog(candidateJson, jsonStartLine);
+      if (jsReq) results.push(jsReq);
+    }
   }
 
   return results;

@@ -6,6 +6,7 @@ import { parseDebugLog } from '../src/parser/debugLogParser.js';
 import { parseRawHttpRequest } from '../src/parser/rawHttpParser.js';
 import { parseLogs } from '../src/parser/index.js';
 import { buildCurlCommand, escapeShellArg } from '../src/builder/curlBuilder.js';
+import { parseJsObjectLog } from '../src/parser/jsObjectParser.js';
 
 test('1. JSON Log Parser', async (t) => {
   await t.test('parses standard Express/Pino structured log', () => {
@@ -191,7 +192,7 @@ test('6. cURL Command Generator', async (t) => {
 test('7. TKE / Kubernetes Container Log Unwrapping & Reverse cURL', async (t) => {
   await t.test('correctly reconstructs POST curl from TKE container log streams', () => {
     const tkeLogs = [
-      `generate curl from this --data-raw '{\\"transactionId\\":\\"41aa2202-0b65-4210-934d-449afd42d70c\\",\\"transactionDate\\":20260824161651,\\"transactionType\\":\\"PD\\",\\"transactionDescription\\":\\"Axiapp Campaign 7e7c16fe-3ac8-463a-aae2-4d22ed507df6\\",\\"points\\\":1000000,\\"forceTransaction\\":\\"True\\"}'","__FILENAME__":"/var/log/tke.log","__HOSTNAME__":"VM-57-45"}`,
+      `generate curl from this --data-raw '{\\"transactionId\\":\\"41aa2202-0b65-4210-934d-449afd42d70c\\",\\"transactionDate\\":20260824161651,\\"transactionType\\":\\"PD\\",\\"transactionDescription\\":\\"Axiapp Campaign 7e7c16fe\\",\\"points\\":1000000,\\"forceTransaction\\":\\"True\\"}'","__FILENAME__":"/var/log/tke.log","__HOSTNAME__":"VM-57-45"}`,
       `{"__CONTENT__":"  -H 'Authorization: Bearer mock-tke-token-uuid-12345' \\\\","__FILENAME__":"/var/log/tke.log"}`,
       `{"__CONTENT__":"  -H 'Content-Type: application/json' \\\\","__FILENAME__":"/var/log/tke.log"}`,
       `{"__CONTENT__":"  -H 'Xc-Authorization: Bearer my-token-123' \\\\","__FILENAME__":"/var/log/tke.log"}`,
@@ -213,5 +214,25 @@ test('7. TKE / Kubernetes Container Log Unwrapping & Reverse cURL', async (t) =>
     assert.match(generated, /-X POST/);
     assert.match(generated, /'https:\/\/gateway\.egw\.xl\.co\.id\/proxy\/comarch\/v1\/o\/b2b\/axiapp\/customers\/60265\/pointsDeduct'/);
     assert.match(generated, /-d '\{"transactionId":"41aa2202-0b65-4210-934d-449afd42d70c"/);
+  });
+});
+
+test('8. JS / Python Object Dictionary Logs (API Call Events)', async (t) => {
+  await t.test('parses single-quoted dictionary logs with nested data and headers', () => {
+    const rawLine = `{"__CONTENT__":"[2026-08-28T12:02:43.467Z] INFO (18 on sidompul-prod): {'id':'6020e440','event':'API Call','message':'Prepare API Call','data':{'url':'https://gateway.sambas.aws.excelcom.co.id/dealermanagement-account/v1/get-profile/6287884421640/profile','method':'GET','headers':{'Content-Type':'application/json','Accept':'application/json','event_id':'6020e440','actor':'6287884421640'}}}"}`;
+
+    const results = parseLogs(rawLine);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].method, 'GET');
+    assert.equal(results[0].url, 'https://gateway.sambas.aws.excelcom.co.id/dealermanagement-account/v1/get-profile/6287884421640/profile');
+    assert.equal(results[0].headers['Content-Type'], 'application/json');
+    assert.equal(results[0].headers['Accept'], 'application/json');
+    assert.equal(results[0].headers['event_id'], '6020e440');
+    assert.equal(results[0].headers['actor'], '6287884421640');
+
+    const curl = buildCurlCommand(results[0], { multiline: true });
+    assert.match(curl, /'https:\/\/gateway\.sambas\.aws\.excelcom\.co\.id\/dealermanagement-account\/v1\/get-profile\/6287884421640\/profile'/);
+    assert.match(curl, /-H 'Content-Type: application\/json'/);
+    assert.match(curl, /-H 'actor: 6287884421640'/);
   });
 });
