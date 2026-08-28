@@ -127,7 +127,10 @@ const SAMPLE_LOGS = {
  * Transforms parsed requests by generating multi-line and single-line cURL commands.
  */
 function enrichRequests(requests, options = {}) {
-  return requests.map(req => {
+  // Sort requests by composition / completeness score (highest first)
+  const sorted = [...requests].sort((a, b) => (b.completenessScore || 0) - (a.completenessScore || 0) || (a.lineNumber || 1) - (b.lineNumber || 1));
+
+  return sorted.map(req => {
     const multilineCurl = buildCurlCommand(req, { ...options, multiline: true });
     const singlelineCurl = buildCurlCommand(req, { ...options, multiline: false });
 

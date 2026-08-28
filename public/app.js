@@ -4,6 +4,7 @@ const state = {
   filteredRequests: [],
   activeFilter: 'ALL',
   searchQuery: '',
+  sortBy: 'completeness',
   samples: {},
   options: {
     baseUrl: '',
@@ -29,6 +30,7 @@ const resultsCountBadge = document.getElementById('resultsCountBadge');
 const parsingStatus = document.getElementById('parsingStatus');
 const searchInput = document.getElementById('searchInput');
 const methodFilters = document.getElementById('methodFilters');
+const sortBySelect = document.getElementById('sortBySelect');
 const requestsList = document.getElementById('requestsList');
 const copyAllBtn = document.getElementById('copyAllBtn');
 const exportScriptBtn = document.getElementById('exportScriptBtn');
@@ -110,6 +112,13 @@ function setupEventListeners() {
     state.searchQuery = e.target.value.toLowerCase();
     applyFilterAndSearch();
   });
+
+  if (sortBySelect) {
+    sortBySelect.addEventListener('change', (e) => {
+      state.sortBy = e.target.value;
+      applyFilterAndSearch();
+    });
+  }
 
   methodFilters.addEventListener('click', (e) => {
     const btn = e.target.closest('.method-filter-btn');
@@ -287,13 +296,14 @@ async function handleFileUpload(file) {
 }
 
 function applyFilterAndSearch() {
-  state.filteredRequests = state.requests.filter(req => {
-    // Method filter
+  const METHOD_PRIORITY = { 'POST': 1, 'PUT': 2, 'PATCH': 3, 'DELETE': 4, 'GET': 5, 'HEAD': 6, 'OPTIONS': 7 };
+
+  // 1. Filter
+  let filtered = state.requests.filter(req => {
     if (state.activeFilter !== 'ALL' && req.method !== state.activeFilter) {
       return false;
     }
 
-    // Search query
     if (state.searchQuery) {
       const q = state.searchQuery;
       const matchUrl = req.url.toLowerCase().includes(q);
@@ -312,6 +322,23 @@ function applyFilterAndSearch() {
     return true;
   });
 
+  // 2. Sort by composition / completeness (default) or user selection
+  filtered.sort((a, b) => {
+    if (state.sortBy === 'completeness') {
+      const scoreDiff = (b.completenessScore || 0) - (a.completenessScore || 0);
+      if (scoreDiff !== 0) return scoreDiff;
+      return (a.lineNumber || 1) - (b.lineNumber || 1);
+    } else if (state.sortBy === 'line') {
+      return (a.lineNumber || 1) - (b.lineNumber || 1);
+    } else if (state.sortBy === 'method') {
+      const pA = METHOD_PRIORITY[a.method] || 99;
+      const pB = METHOD_PRIORITY[b.method] || 99;
+      return pA - pB || (b.completenessScore || 0) - (a.completenessScore || 0);
+    }
+    return 0;
+  });
+
+  state.filteredRequests = filtered;
   renderResults();
 }
 
@@ -345,14 +372,19 @@ function renderResults() {
     const curl = state.options.multiline ? req.multilineCurl || req.curlCommand : req.singlelineCurl || req.curlCommand;
     const headerCount = Object.keys(req.headers || {}).length;
     const hasBody = req.body && req.body.trim().length > 0;
+    const isTopComposition = index === 0 && (req.completenessScore || 0) >= 50;
 
     return `
-      <div class="bg-slate-800/80 border border-slate-700/80 hover:border-slate-600 rounded-xl p-4 shadow-md transition space-y-3 animate-fade-in" data-id="${req.id}">
+      <div class="bg-slate-800/80 border ${isTopComposition ? 'border-sky-500/60 ring-1 ring-sky-500/30' : 'border-slate-700/80 hover:border-slate-600'} rounded-xl p-4 shadow-md transition space-y-3 animate-fade-in" data-id="${req.id}">
         <!-- Request Card Top Bar -->
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center space-x-2.5 overflow-hidden">
+          <div class="flex items-center space-x-2 overflow-hidden">
             <span class="badge-${req.method} font-bold px-2 py-0.5 text-xs rounded-md uppercase tracking-wider">${req.method}</span>
             <span class="font-mono text-xs font-medium text-slate-200 truncate max-w-md" title="${escapeHtml(req.url)}">${escapeHtml(req.url)}</span>
+            
+            ${isTopComposition ? `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1 shadow-sm">🌟 Best Match</span>` : ''}
+            ${hasBody ? `<span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">Payload</span>` : ''}
+            ${headerCount > 0 ? `<span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300">${headerCount} hdr${headerCount === 1 ? '' : 's'}</span>` : ''}
             ${req.statusCode ? `<span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded ${req.statusCode < 400 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}">${req.statusCode}</span>` : ''}
           </div>
           <div class="flex items-center space-x-2">

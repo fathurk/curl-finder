@@ -236,3 +236,23 @@ test('8. JS / Python Object Dictionary Logs (API Call Events)', async (t) => {
     assert.match(curl, /-H 'actor: 6287884421640'/);
   });
 });
+
+test('9. Completeness & Composition Scoring', async (t) => {
+  await t.test('ranks complete POST curl higher than simple GET', () => {
+    const mixed = [
+      'GET /api/v1/health HTTP/1.1',
+      'POST /api/v1/users HTTP/1.1\nHost: api.example.com\nAuthorization: Bearer secret\nContent-Type: application/json\n\n{"name":"alice"}'
+    ].join('\n\n');
+
+    const results = parseLogs(mixed);
+    assert.equal(results.length, 2);
+
+    // Sort by completeness
+    results.sort((a, b) => b.completenessScore - a.completenessScore);
+
+    // POST request with body and auth headers should come first
+    assert.equal(results[0].method, 'POST');
+    assert.ok(results[0].completenessScore > results[1].completenessScore);
+  });
+});
+

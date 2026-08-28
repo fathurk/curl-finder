@@ -227,6 +227,15 @@
               <button data-method="PUT" class="method-filter-btn px-2 py-1 rounded-md font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">PUT</button>
               <button data-method="DELETE" class="method-filter-btn px-2 py-1 rounded-md font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">DEL</button>
             </div>
+
+            <!-- Sort By Selector -->
+            <div class="flex items-center space-x-1.5 text-xs text-slate-400 ml-auto">
+              <select id="sortBySelect" class="bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer transition" title="Sort order">
+                <option value="completeness" selected>🌟 Best Composition (Most Complete)</option>
+                <option value="line">⏱️ Log Order (Line #)</option>
+                <option value="method">🔤 Method (POST &rarr; GET)</option>
+              </select>
+            </div>
           </div>
         </div>
 
