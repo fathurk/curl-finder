@@ -211,7 +211,7 @@ test('7. TKE / Kubernetes Container Log Unwrapping & Reverse cURL', async (t) =>
       `generate curl from this --data-raw '{\\"transactionId\\":\\"41aa2202-0b65-4210-934d-449afd42d70c\\",\\"transactionDate\\":20260824161651,\\"transactionType\\":\\"PD\\",\\"transactionDescription\\":\\"Axiapp Campaign 7e7c16fe\\",\\"points\\":1000000,\\"forceTransaction\\":\\"True\\"}'","__FILENAME__":"/var/log/tke.log","__HOSTNAME__":"VM-57-45"}`,
       `{"__CONTENT__":"  -H 'Authorization: Bearer mock-tke-token-uuid-12345' \\\\","__FILENAME__":"/var/log/tke.log"}`,
       `{"__CONTENT__":"  -H 'Content-Type: application/json' \\\\","__FILENAME__":"/var/log/tke.log"}`,
-      `{"__CONTENT__":"  -H 'Xc-Authorization: Bearer my-token-123' \\\\","__FILENAME__":"/var/log/tke.log"}`,
+      `{"__CONTENT__":"  -H 'Xc-Authorization: Bearer mock-token-123' \\\\","__FILENAME__":"/var/log/tke.log"}`,
       `{"__CONTENT__":"curl -X POST 'https://gateway.egw.xl.co.id/proxy/comarch/v1/o/b2b/axiapp/customers/60265/pointsDeduct' \\\\","__FILENAME__":"/var/log/tke.log"}`
     ].join('\n');
 
@@ -221,7 +221,7 @@ test('7. TKE / Kubernetes Container Log Unwrapping & Reverse cURL', async (t) =>
     assert.equal(results[0].url, 'https://gateway.egw.xl.co.id/proxy/comarch/v1/o/b2b/axiapp/customers/60265/pointsDeduct');
     assert.equal(results[0].headers['Content-Type'], 'application/json');
     assert.equal(results[0].headers['Authorization'], 'Bearer mock-tke-token-uuid-12345');
-    assert.equal(results[0].headers['Xc-Authorization'], 'Bearer my-token-123');
+    assert.equal(results[0].headers['Xc-Authorization'], 'Bearer mock-token-123');
     assert.match(results[0].body, /"transactionId":"41aa2202-0b65-4210-934d-449afd42d70c"/);
     assert.match(results[0].body, /"points":1000000/);
 

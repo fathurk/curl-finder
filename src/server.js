@@ -119,7 +119,7 @@ const SAMPLE_LOGS = {
     `{"__CONTENT__":"--data-raw '{\\"transactionId\\":\\"41aa2202-0b65-4210-934d-449afd42d70c\\",\\"transactionDate\\":20260824161651,\\"transactionType\\":\\"PD\\",\\"transactionDescription\\":\\"Axiapp Campaign 7e7c16fe\\",\\"points\\":1000000,\\"forceTransaction\\":\\"True\\"}'","__FILENAME__":"/var/log/stdout.log"}`,
     `{"__CONTENT__":"  -H 'Authorization: Bearer mock-tke-token-uuid-12345' \\\\","__FILENAME__":"/var/log/stdout.log"}`,
     `{"__CONTENT__":"  -H 'Content-Type: application/json' \\\\","__FILENAME__":"/var/log/stdout.log"}`,
-    `{"__CONTENT__":"  -H 'Xc-Authorization: Bearer eyJhbGciOiJSUzI1Ni... ' \\\\","__FILENAME__":"/var/log/stdout.log"}`,
+    `{"__CONTENT__":"  -H 'Xc-Authorization: Bearer mock-xc-auth-token-67890' \\\\","__FILENAME__":"/var/log/stdout.log"}`,
     `{"__CONTENT__":"curl -X POST 'https://gateway.egw.xl.co.id/proxy/comarch/v1/o/b2b/axiapp/customers/60265/pointsDeduct' \\\\","__FILENAME__":"/var/log/stdout.log"}`
   ].join('\n'),
 
